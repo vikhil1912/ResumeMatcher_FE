@@ -10,17 +10,46 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../utils/axios";
 import toast from "react-hot-toast";
 
-export const CandidateDashboard = () => {
-  const { user, logoutContext } = useAuth();
+export const CandidateDashboard = ({ user }) => {
   const { darkMode } = useDarkMode();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("analyzer");
   const [jobDescription, setJobDescription] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
-  const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [resumeHistory, setResumeHistory] = useState([]);
+
+  const {
+    data: matchData,
+    mutate: analyzeMutate,
+    isPending: analysisLoading,
+  } = useMutation({
+    mutationFn: async () => {
+      const formData = new FormData();
+      formData.append("resume", resumeFile);
+      formData.append("JobDescription", jobDescription);
+      const response = await axiosInstance.post("/student/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setAnalysisResult(response?.data?.data);
+      return response;
+    },
+    onSuccess: () => {
+      toast.success("Uploaded");
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || "Something went wrong");
+    },
+  });
+
+  const { data: historyData, isLoading: isHistoryLoading } = useQuery({
+    queryKey: ["history"],
+    queryFn: async () => await axiosInstance.get("/student/history"),
+  });
+
+  const resumeHistory = historyData?.data;
 
   const { mutate: logoutMutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -36,38 +65,9 @@ export const CandidateDashboard = () => {
     },
   });
 
+  const result = matchData?.data;
+
   const handleFileUpload = (file) => setResumeFile(file);
-  const deleteResume = (id) =>
-    setResumeHistory(resumeHistory.filter((r) => r.id !== id));
-  const toggleStar = (id) =>
-    setResumeHistory(
-      resumeHistory.map((r) =>
-        r.id === id ? { ...r, starred: !r.starred } : r
-      )
-    );
-
-  const startAnalysis = async () => {
-    setAnalysisLoading(true);
-    const result = await mockAnalyzeAPI(jobDescription, resumeFile);
-    setAnalysisResult(result);
-    setAnalysisLoading(false);
-  };
-
-  const closeResult = () => {
-    const newEntry = {
-      id: Date.now(),
-      fileName: resumeFile.name,
-      uploadDate: new Date().toLocaleDateString(),
-      job: jobDescription.split("\n")[0] || "Analyzed Role",
-      improvements: analysisResult.improvements,
-      suggestions: analysisResult.suggestions,
-      progress: analysisResult.progress,
-    };
-    setResumeHistory([newEntry, ...resumeHistory]);
-    setJobDescription("");
-    setResumeFile(null);
-    setAnalysisResult(null);
-  };
 
   const activeClass = "text-white border-b-2 border-white";
   const inactiveClass = darkMode
@@ -92,7 +92,7 @@ export const CandidateDashboard = () => {
           <div>
             <h1 className="text-4xl font-extrabold">Resume Matcher</h1>
             <p className="mt-1 text-lg text-gray-300">
-              Welcome back, {user?.firstName || "Candidate"}!
+              Welcome back, {user?.name || "Candidate"}!
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -190,7 +190,7 @@ export const CandidateDashboard = () => {
                 {/* Analyze Button */}
                 <div className="lg:col-span-2 text-center mt-4">
                   <button
-                    onClick={startAnalysis}
+                    onClick={() => analyzeMutate()}
                     disabled={!jobDescription || !resumeFile || analysisLoading}
                     className={`px-8 py-3 rounded-lg font-semibold transition ${
                       !jobDescription || !resumeFile || analysisLoading
@@ -205,35 +205,7 @@ export const CandidateDashboard = () => {
                 </div>
               </>
             ) : (
-              <div className="lg:col-span-2 space-y-4">
-                <button
-                  onClick={closeResult}
-                  className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                  aria-label="Close"
-                >
-                  &times;
-                </button>
-                <h2 className="text-2xl font-semibold">Analysis Result</h2>
-                <p>
-                  <strong>Match Progress:</strong> {analysisResult.progress}%
-                </p>
-                <div>
-                  <h3 className="font-medium mt-4">Improvements:</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {analysisResult.improvements.map((imp, i) => (
-                      <li key={i}>{imp}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="font-medium mt-4">Suggestions:</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {analysisResult.suggestions.map((sug, i) => (
-                      <li key={i}>{sug}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+              <ResultPage />
             )}
           </div>
         ) : (
@@ -242,7 +214,7 @@ export const CandidateDashboard = () => {
               darkMode ? "" : "bg-white/20 backdrop-blur-md"
             } rounded-xl p-6 space-y-6`}
           >
-            {resumeHistory.map((r) => (
+            {resumeHistory?.map((r) => (
               <ResumeHistoryItem
                 key={r.id}
                 resume={r}
@@ -269,5 +241,76 @@ async function mockAnalyzeAPI() {
         }),
       2000
     )
+  );
+}
+
+export default function ResultPage() {
+  const matchScore = 72;
+
+  const suggestions = [
+    "Add more relevant keywords like 'Data Engineering', 'Azure Synapse'.",
+    "Include experience with ETL tools like Talend or Apache NiFi.",
+    "Mention hands-on exposure to production-level pipelines.",
+  ];
+
+  const getProgressColor = (score) => {
+    if (score >= 80) return "bg-green-500";
+    if (score >= 50) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 text-white p-6">
+      <div className="bg-slate-950 p-8 rounded-2xl shadow-2xl max-w-2xl w-full">
+        <h1 className="text-3xl font-bold mb-6 text-center">
+          🎯 Match Results
+        </h1>
+
+        {/* Match Percentage */}
+        <div className="mb-8">
+          <div className="text-lg font-semibold mb-2">Overall Match:</div>
+          <div className="w-full bg-slate-700 h-5 rounded-full overflow-hidden">
+            <div
+              className={`h-5 ${getProgressColor(
+                matchScore
+              )} transition-all duration-500`}
+              style={{ width: `${matchScore}%` }}
+            ></div>
+          </div>
+          <div className="text-right mt-2 text-lg font-bold">{matchScore}%</div>
+        </div>
+
+        {/* Suggestions */}
+        <div>
+          <div className="text-lg font-semibold mb-3 flex items-center gap-2 text-yellow-400">
+            ⚠️ AI Suggestions to Improve:
+          </div>
+          <ul className="list-disc ml-6 space-y-2 text-slate-300">
+            {suggestions.length > 0 ? (
+              suggestions.map((s, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span>➤</span>
+                  <span>{s}</span>
+                </li>
+              ))
+            ) : (
+              <li className="text-green-400 flex items-center gap-2">
+                ✅ Resume is a perfect match!
+              </li>
+            )}
+          </ul>
+        </div>
+
+        {/* Buttons */}
+        <div className="mt-8 flex justify-end gap-4">
+          <button className="px-4 py-2 bg-slate-700 rounded-lg hover:bg-slate-600 transition">
+            Download Suggestions 📥
+          </button>
+          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold">
+            Improve Resume
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

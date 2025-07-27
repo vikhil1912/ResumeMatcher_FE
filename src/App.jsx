@@ -41,7 +41,6 @@ export default function App() {
   });
   useEffect(() => {
     const t = userData;
-    console.log(t);
   }, []);
 
   return (
@@ -66,7 +65,7 @@ export default function App() {
             path="/student"
             element={
               <ProtectedRoute requiredRole="Student" user={user}>
-                <CandidateDashboard />
+                <CandidateDashboard user={user} />
               </ProtectedRoute>
             }
           />

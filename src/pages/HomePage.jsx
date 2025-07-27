@@ -1,4 +1,5 @@
-import { RoleCard } from '../components/RoleCard';
+import { Link } from "react-router-dom";
+import { RoleCard } from "../components/RoleCard";
 
 export function HomePage() {
   return (
@@ -12,17 +13,23 @@ export function HomePage() {
         </p>
 
         <div className="grid gap-4 sm:gap-6">
-          <RoleCard 
-            title="I’m a Candidate"
+          <RoleCard
+            title="I’m a Student"
             description="Looking for job opportunities"
-            link="/auth?role=candidate"
+            link="/signup?role=Student"
           />
           <RoleCard
             title="I’m a Recruiter"
             description="Hiring talented candidates"
-            link="/auth?role=recruiter"
+            link="/signup?role=HR"
           />
         </div>
+        <p className="mt-3">
+          Already have an account ?{" "}
+          <Link to={"/login"}>
+            <span className="text-blue-700 cursor-pointer">Login</span>
+          </Link>
+        </p>
       </div>
 
       <footer className="mt-6 text-xs text-indigo-100/80">

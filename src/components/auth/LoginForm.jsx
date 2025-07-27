@@ -1,4 +1,11 @@
-export function LoginForm({formData,errors,isLoading,apiError,handleChange,onSubmit }) {
+export function LoginForm({
+  formData,
+  errors,
+  isLoading,
+  apiError,
+  handleChange,
+  onSubmit,
+}) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {apiError && (
@@ -8,14 +15,16 @@ export function LoginForm({formData,errors,isLoading,apiError,handleChange,onSub
       )}
 
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-800">Email</label>
+        <label className="block text-sm font-medium mb-1 text-gray-800">
+          Email
+        </label>
         <input
           name="email"
           type="email"
           value={formData.email}
           onChange={handleChange}
           className={`w-full p-3 rounded-lg bg-white/80 text-black placeholder-gray-400 border ${
-            errors.email ? 'border-2 border-red-500' : 'border-gray-300'
+            errors.email ? "border-2 border-red-500" : "border-gray-300"
           }`}
           placeholder="Enter your email"
         />
@@ -25,14 +34,16 @@ export function LoginForm({formData,errors,isLoading,apiError,handleChange,onSub
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-800">Password</label>
+        <label className="block text-sm font-medium mb-1 text-gray-800">
+          Password
+        </label>
         <input
           name="password"
           type="password"
           value={formData.password}
           onChange={handleChange}
           className={`w-full p-3 rounded-lg bg-white/80 text-black placeholder-gray-400 border ${
-            errors.password ? 'border-2 border-red-500' : 'border-gray-300'
+            errors.password ? "border-2 border-red-500" : "border-gray-300"
           }`}
           placeholder="Enter your password"
         />
@@ -45,10 +56,10 @@ export function LoginForm({formData,errors,isLoading,apiError,handleChange,onSub
         type="submit"
         disabled={isLoading}
         className={`w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition ${
-          isLoading ? 'opacity-70 cursor-not-allowed' : ''
+          isLoading ? "opacity-70 cursor-not-allowed" : ""
         }`}
       >
-        {isLoading ? 'Signing in...' : 'Sign In'}
+        {isLoading ? "Signing in..." : "Sign In"}
       </button>
     </form>
   );

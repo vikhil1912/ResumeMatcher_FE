@@ -54,18 +54,18 @@ export const ResultPage = () => {
   const scores =
     !isLoading && historyData
       ? scoreTemplate.map((item) => {
-          const raw = historyData.data.score[item.key] ?? 0;
-          return {
-            label: item.label,
-            score: Math.round(raw * 100),
-            icon: item.icon,
-          };
-        })
-      : scoreTemplate.map((item) => ({
+        const raw = historyData.data.score[item.key] ?? 0;
+        return {
           label: item.label,
-          score: 0,
+          score: Math.round(raw * 100),
           icon: item.icon,
-        }));
+        };
+      })
+      : scoreTemplate.map((item) => ({
+        label: item.label,
+        score: 0,
+        icon: item.icon,
+      }));
 
   const finalScore = historyData?.data?.score?.result || 0;
   const suggestions = suggestionsData?.data?.suggestions;
@@ -81,17 +81,38 @@ export const ResultPage = () => {
 
   if (isLoading || isSuggestionLoading) return <ResultLoading />;
 
+
+  if (!historyData?.data?.score) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold">No Match History Found</h2>
+          <p className="text-gray-400 mt-2">Please upload your resume and job description to view results.</p>
+          <button
+            onClick={() => navigate("/student")}
+            className="mt-6 px-4 py-2 bg-blue-700 rounded hover:bg-blue-800 transition"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
         <button
-          onClick={() => console.log("HI")}
-          className="bg-blue-700 p-2 rounded-lg text-white"
+          type="button"
+          onClick={() => {
+            navigate("/student");
+          }}
+          className="bg-blue-700 px-4 py-2 rounded-lg text-white hover:bg-blue-800 transition"
         >
           Home
         </button>
-        <h1 className="text-3xl md:text-4xl font-bold text-center w-full -ml-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-center mr-[25%]">
           Resume vs JD Match Result
         </h1>
       </div>

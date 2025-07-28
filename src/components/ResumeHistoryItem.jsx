@@ -1,21 +1,18 @@
-import React from "react";
-import { useState } from "react";
-import { ArrowUpRight } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowUpRight, Loader } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import axiosInstance from "../utils/axios";
 import toast from "react-hot-toast";
-import { Loader } from "lucide-react";
 
-export const ResumeHistoryItem = ({ resume, darkMode, onDelete, onStar }) => {
+export const ResumeHistoryItem = ({ resume, darkMode }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [showFullJD, setShowFullJD] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
   const { mutate: deleteMutation, isPending: isDeleting } = useMutation({
     mutationFn: async () => {
-      const response = await axiosInstance.delete(
-        `student/history/${resume._id}`
-      );
+      await axiosInstance.delete(`student/history/${resume._id}`);
     },
     onSuccess: () => {
       toast.success("Deleted");
@@ -25,57 +22,41 @@ export const ResumeHistoryItem = ({ resume, darkMode, onDelete, onStar }) => {
       toast.error(error?.response?.data?.message);
     },
   });
+
   return (
     <div
-      className={`p-5  rounded-lg border transition-all ${
-        darkMode
-          ? "bg-gray-700/50 border-gray-600 hover:border-gray-500"
-          : "bg-white border-gray-200 hover:border-gray-300"
-      }`}
+      className={`p-5 rounded-lg border transition-all ${darkMode
+        ? "bg-gray-800 border-gray-600 hover:border-gray-500"
+        : "bg-white border-gray-200 hover:border-gray-300"
+        }`}
     >
+      {/* Header */}
       <div className="flex justify-between items-start mb-3">
-        <div className="flex items-center">
-          <h3
-            className={`font-bold text-lg ${
-              darkMode ? "text-white" : "text-gray-800"
+        <h3
+          className={`font-bold text-lg ${darkMode ? "text-white" : "text-black"
             }`}
-          >
-            {resume?.fileName}
-          </h3>
-          <span
-            className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${
-              darkMode
-                ? "bg-blue-900/30 text-blue-300"
-                : "bg-blue-100 text-blue-800"
-            }`}
-          >
-            v{resume?._id}
-          </span>
-        </div>
+        >
+          {resume?.fileName}
+        </h3>
 
         <div className="flex space-x-2">
           <button
             onClick={() => navigate(`/student-result/${resume._id}`)}
-            className={`p-1.5 rounded-lg bg-blue-500 cursor-pointer  ${
-              darkMode ? "hover:bg-gray-600" : "hover:bg-blue-400"
-            }`}
-            aria-label={resume?.starred ? "Unstar resume" : "Star resume"}
+            className={`p-1.5 rounded-lg bg-blue-500 text-white font-semibold ${darkMode ? "hover:bg-gray-600" : "hover:bg-blue-400"
+              }`}
           >
             OPEN
           </button>
           <button
-            onClick={(e) => {
-              deleteMutation();
-            }}
-            className={`p-1.5 rounded-full ${
-              darkMode ? "hover:bg-gray-600" : "hover:bg-gray-100"
-            }`}
+            onClick={() => deleteMutation()}
+            className={`p-1.5 rounded-full ${darkMode ? "hover:bg-gray-600" : "hover:bg-gray-100"
+              }`}
             aria-label="Delete resume"
           >
             {!isDeleting ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-red-500"
+                className="h-7 w-7 text-red-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -94,51 +75,47 @@ export const ResumeHistoryItem = ({ resume, darkMode, onDelete, onStar }) => {
         </div>
       </div>
 
-      <div className="mb-2">
-        <p
-          className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"}`}
-        >
-          Uploaded: {new Date(resume?.createdAt).toUTCString()}
-        </p>
-        <div className="flex flex-col md:flex-row gap-4 mt-2">
-          <div className="relative group w-full md:w-1/3">
-            <iframe
-              src={`${resume?.resume?.Resume}#toolbar=0&navpanes=0&scrollbar=0`}
-              className="w-full h-[250px] rounded border"
-            ></iframe>
-            <div
-              onClick={() => window.open(resume?.resume?.Resume, "_blank")}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-lg cursor-pointer text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10"
-            >
-              <div className="flex items-center gap-2 text-lg font-semibold ">
-                <ArrowUpRight className="w-5 h-5" />
-                OPEN
-              </div>
+      {/* Uploaded Date */}
+      <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+        Uploaded: {new Date(resume?.createdAt).toUTCString()}
+      </p>
+
+      {/* Content Section */}
+      <div className="flex flex-col md:flex-row gap-4 mt-3">
+        {/* Resume Image */}
+        <div className="relative group w-full md:w-1/3 max-h-[220px] overflow-hidden rounded border">
+          <iframe
+            src={`https://docs.google.com/gview?url=${encodeURIComponent(
+              resume?.resume?.Resume
+            )}&embedded=true`}
+            width="100%"
+            height="220px"
+            title="Resume Preview"
+            className="rounded-lg shadow"
+          />
+          <div
+            onClick={() => window.open(resume?.resume?.Resume, "_blank")}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-lg cursor-pointer text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10"
+          >
+            <div className="flex items-center gap-2 text-lg font-semibold">
+              <ArrowUpRight className="w-5 h-5" />
+              OPEN
             </div>
           </div>
-          <p
-            className={`w-full md:w-2/3 font-medium ${
-              darkMode ? "text-white" : "text-black"
-            }`}
-          >
-            {showFullJD
-              ? resume?.job_description
-              : resume?.job_description?.slice(0, 400) + "..."}
-          </p>
-          {resume?.job_description?.length > 400 && (
-            <button
-              onClick={() => setShowFullJD(!showFullJD)}
-              className={`mt-2 text-sm font-semibold ${
-                darkMode ? "text-white" : "text-black"
-              } underline`}
-            >
-              {showFullJD ? "View Less" : "View More"}
-            </button>
-          )}
         </div>
+
+        {/* Job Description */}
+        <p
+          onClick={() => setExpanded(!expanded)}
+          className={`w-full md:w-2/3 font-medium cursor-pointer ${darkMode ? "text-white" : "text-black"
+            } ${!expanded ? "line-clamp-5" : ""}`}
+        >
+          {resume?.job_description}
+        </p>
       </div>
 
-      <div>
+      {/* Match Progress */}
+      <div className="mt-4">
         <div className="flex justify-between text-sm mb-1">
           <span className={darkMode ? "text-gray-300" : "text-gray-600"}>
             Match Progress
@@ -148,22 +125,20 @@ export const ResumeHistoryItem = ({ resume, darkMode, onDelete, onStar }) => {
           </span>
         </div>
         <div
-          className={`w-full rounded-full h-2 ${
-            darkMode ? "bg-gray-600" : "bg-gray-200"
-          }`}
+          className={`w-full rounded-full h-2 ${darkMode ? "bg-gray-600" : "bg-gray-200"
+            }`}
         >
           <div
-            className={`h-2 rounded-full ${
-              resume?.score?.result < 40
-                ? "bg-red-500"
-                : resume?.score?.result < 70
+            className={`h-2 rounded-full ${resume?.score?.result < 40
+              ? "bg-red-500"
+              : resume?.score?.result < 70
                 ? "bg-yellow-500"
                 : "bg-green-500"
-            }`}
+              }`}
             style={{ width: `${resume?.score?.result}%` }}
           ></div>
         </div>
       </div>
     </div>
   );
-};
+}

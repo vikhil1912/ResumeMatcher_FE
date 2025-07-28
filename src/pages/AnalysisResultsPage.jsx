@@ -58,7 +58,6 @@ export const AnalysisResultsPage = () => {
             const resume = resumeObj?.resumeId;
             const score = resumeObj?.score;
             const student = resume?.StudentId;
-            console.log('student');
             const studentName = student?.name || "Student";
 
             return (

@@ -1,19 +1,18 @@
 import React from 'react';
 
-export const JDCard = ({ 
-  jobDescription, 
-  setJobDescription, 
-  history, 
-  loading, 
-  darkMode, 
-  onFetchTopResumes 
+export const JDCard = ({
+  jobDescription,
+  setJobDescription,
+  history,
+  loading,
+  darkMode,
+  onFetchTopResumes
 }) => {
   return (
-    <div className={`p-6 rounded-2xl shadow-xl border border-white/20 ${
-      darkMode ? 'bg-gray-800' : 'bg-white/20 backdrop-blur-md text-white'
-    }`}>
+    <div className={`p-6 rounded-2xl shadow-xl border border-white/20 ${darkMode ? 'bg-gray-800' : 'bg-white/20 backdrop-blur-md text-white'
+      }`}>
       <h2 className="text-2xl font-semibold mb-6">Job Description</h2>
-      
+
       {/* Job Description Textarea */}
       <div className="mb-6">
         <label className={`block mb-2 font-medium ${darkMode ? 'text-gray-300' : 'text-white/90'}`}>
@@ -23,14 +22,13 @@ export const JDCard = ({
           value={jobDescription}
           onChange={(e) => setJobDescription(e.target.value)}
           placeholder="Enter job description here..."
-          className={`w-full h-48 p-4 rounded-lg border focus:outline-none transition ${
-            darkMode
-              ? "bg-gray-700 border-gray-600 focus:border-blue-400 text-gray-100 placeholder-gray-400"
-              : "bg-white border-gray-300 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-          }`}
+          className={`w-full h-48 p-4 rounded-lg border focus:outline-none transition ${darkMode
+            ? "bg-gray-700 border-gray-600 focus:border-blue-400 text-gray-100 placeholder-gray-400"
+            : "bg-white border-gray-300 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+            }`}
         />
       </div>
-      
+
       {/* Previous JD Selection */}
       <div className="mb-8">
         <label className={`block mb-2 font-medium ${darkMode ? 'text-gray-300' : 'text-white/90'}`}>
@@ -38,37 +36,36 @@ export const JDCard = ({
         </label>
         <select
           onChange={(e) => {
-            const selected = history.find(h => h.id === parseInt(e.target.value));
-            if (selected) setJobDescription(selected.jdText);
+            const selected = history.find(h => h._id === e.target.value);
+            if (selected) setJobDescription(selected.JDId?.description);
           }}
-          className={`w-full p-3 rounded-lg border ${
-            darkMode 
-              ? "bg-gray-700 border-gray-600 text-gray-100" 
-              : "bg-white border-gray-300 text-gray-900"
-          }`}
+          className={`w-full p-3 rounded-lg border ${darkMode
+            ? "bg-gray-700 border-gray-600 text-gray-100"
+            : "bg-white border-gray-300 text-gray-900"
+            }`}
         >
           <option value="">Select from history</option>
-          {history.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.jdText.substring(0, 100)}{item.jdText.length > 100 ? "..." : ""}
+          {history?.map((item) => (
+            <option key={item._id} value={item._id}>
+              {item.JDId?.description?.substring(0, 100)}
+              {item.JDId?.description?.length > 100 ? "..." : ""}
             </option>
           ))}
         </select>
       </div>
-      
+
       {/* Fetch Resumes Button */}
       <button
         onClick={onFetchTopResumes}
         disabled={loading || !jobDescription.trim()}
-        className={`w-full py-3 rounded-lg font-semibold transition ${
-          loading
-            ? "bg-gray-500 cursor-not-allowed"
-            : !jobDescription.trim()
+        className={`w-full py-3 rounded-lg font-semibold transition ${loading
+          ? "bg-gray-500 cursor-not-allowed"
+          : !jobDescription.trim()
             ? `${darkMode ? "bg-gray-600" : "bg-gray-400"} cursor-not-allowed`
             : darkMode
-            ? "bg-blue-600 hover:bg-blue-500 text-white"
-            : "bg-blue-500 hover:bg-blue-400 text-white"
-        }`}
+              ? "bg-blue-600 hover:bg-blue-500 text-white"
+              : "bg-blue-500 hover:bg-blue-400 text-white"
+          }`}
       >
         {loading ? (
           <span className="flex items-center justify-center">

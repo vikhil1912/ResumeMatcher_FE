@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../utils/axios";
 import toast from "react-hot-toast";
+import ResultPage from "./ResultsPage";
+import ResultLoading from "../components/skeletons/resultLoading";
 
 export const CandidateDashboard = ({ user }) => {
   const { darkMode } = useDarkMode();
@@ -36,8 +38,9 @@ export const CandidateDashboard = ({ user }) => {
       setAnalysisResult(response?.data?.data);
       return response;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Uploaded");
+      navigate(`/student-result/${data?.data?.data?.history_id}`);
     },
     onError: (error) => {
       toast.error(error?.response?.data?.message || "Something went wrong");
@@ -50,6 +53,7 @@ export const CandidateDashboard = ({ user }) => {
   });
 
   const resumeHistory = historyData?.data;
+  resumeHistory?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const { mutate: logoutMutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -65,8 +69,6 @@ export const CandidateDashboard = ({ user }) => {
     },
   });
 
-  const result = matchData?.data;
-
   const handleFileUpload = (file) => setResumeFile(file);
 
   const activeClass = "text-white border-b-2 border-white";
@@ -77,6 +79,8 @@ export const CandidateDashboard = ({ user }) => {
   useEffect(() => {
     document.title = "Dashboard|Resume Matcher";
   }, []);
+
+  if (analysisLoading) return <ResultLoading />;
 
   return (
     <div
@@ -205,7 +209,7 @@ export const CandidateDashboard = ({ user }) => {
                 </div>
               </>
             ) : (
-              <ResultPage />
+              <ResultPage analysisResult={analysisResult} />
             )}
           </div>
         ) : (
@@ -229,88 +233,3 @@ export const CandidateDashboard = ({ user }) => {
     </div>
   );
 };
-
-async function mockAnalyzeAPI() {
-  return new Promise((res) =>
-    setTimeout(
-      () =>
-        res({
-          progress: 82,
-          improvements: ["Added keywords", "Optimized bullets"],
-          suggestions: ["Use metrics", "ATS format"],
-        }),
-      2000
-    )
-  );
-}
-
-export default function ResultPage() {
-  const matchScore = 72;
-
-  const suggestions = [
-    "Add more relevant keywords like 'Data Engineering', 'Azure Synapse'.",
-    "Include experience with ETL tools like Talend or Apache NiFi.",
-    "Mention hands-on exposure to production-level pipelines.",
-  ];
-
-  const getProgressColor = (score) => {
-    if (score >= 80) return "bg-green-500";
-    if (score >= 50) return "bg-yellow-500";
-    return "bg-red-500";
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 text-white p-6">
-      <div className="bg-slate-950 p-8 rounded-2xl shadow-2xl max-w-2xl w-full">
-        <h1 className="text-3xl font-bold mb-6 text-center">
-          🎯 Match Results
-        </h1>
-
-        {/* Match Percentage */}
-        <div className="mb-8">
-          <div className="text-lg font-semibold mb-2">Overall Match:</div>
-          <div className="w-full bg-slate-700 h-5 rounded-full overflow-hidden">
-            <div
-              className={`h-5 ${getProgressColor(
-                matchScore
-              )} transition-all duration-500`}
-              style={{ width: `${matchScore}%` }}
-            ></div>
-          </div>
-          <div className="text-right mt-2 text-lg font-bold">{matchScore}%</div>
-        </div>
-
-        {/* Suggestions */}
-        <div>
-          <div className="text-lg font-semibold mb-3 flex items-center gap-2 text-yellow-400">
-            ⚠️ AI Suggestions to Improve:
-          </div>
-          <ul className="list-disc ml-6 space-y-2 text-slate-300">
-            {suggestions.length > 0 ? (
-              suggestions.map((s, i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <span>➤</span>
-                  <span>{s}</span>
-                </li>
-              ))
-            ) : (
-              <li className="text-green-400 flex items-center gap-2">
-                ✅ Resume is a perfect match!
-              </li>
-            )}
-          </ul>
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-8 flex justify-end gap-4">
-          <button className="px-4 py-2 bg-slate-700 rounded-lg hover:bg-slate-600 transition">
-            Download Suggestions 📥
-          </button>
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold">
-            Improve Resume
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}

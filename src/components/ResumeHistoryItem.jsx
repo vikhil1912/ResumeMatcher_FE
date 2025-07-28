@@ -2,10 +2,29 @@ import React from "react";
 import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axiosInstance from "../utils/axios";
+import toast from "react-hot-toast";
+import { Loader } from "lucide-react";
 
 export const ResumeHistoryItem = ({ resume, darkMode, onDelete, onStar }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showFullJD, setShowFullJD] = useState(false);
+  const { mutate: deleteMutation, isPending: isDeleting } = useMutation({
+    mutationFn: async () => {
+      const response = await axiosInstance.delete(
+        `student/history/${resume._id}`
+      );
+    },
+    onSuccess: () => {
+      toast.success("Deleted");
+      queryClient.invalidateQueries({ queryKey: ["history"] });
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message);
+    },
+  });
   return (
     <div
       className={`p-5  rounded-lg border transition-all ${
@@ -36,7 +55,7 @@ export const ResumeHistoryItem = ({ resume, darkMode, onDelete, onStar }) => {
 
         <div className="flex space-x-2">
           <button
-            onClick={() => navigate("#")}
+            onClick={() => navigate(`/student-result/${resume._id}`)}
             className={`p-1.5 rounded-lg bg-blue-500 cursor-pointer  ${
               darkMode ? "hover:bg-gray-600" : "hover:bg-blue-400"
             }`}
@@ -46,28 +65,31 @@ export const ResumeHistoryItem = ({ resume, darkMode, onDelete, onStar }) => {
           </button>
           <button
             onClick={(e) => {
-              // e.stopPropagation();
-              // onDelete();
+              deleteMutation();
             }}
             className={`p-1.5 rounded-full ${
               darkMode ? "hover:bg-gray-600" : "hover:bg-gray-100"
             }`}
             aria-label="Delete resume"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-red-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
+            {!isDeleting ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-red-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            ) : (
+              <Loader className="w-5 h-5 animate-spin text-red-500" />
+            )}
           </button>
         </div>
       </div>

@@ -174,7 +174,7 @@ export const CandidateDashboard = ({ user }) => {
                       />
                     ) : (
                       <div className="flex flex-col items-center">
-                        <p className="font-medium mb-2 text-gray-900 dark:text-gray-100">
+                        <p className="font-medium mb-2 text-black dark:text-gray-100">
                           {resumeFile.name}
                         </p>
                         <button
@@ -213,15 +213,32 @@ export const CandidateDashboard = ({ user }) => {
             className={`${darkMode ? "" : "bg-white/20 backdrop-blur-md"
               } rounded-xl p-6 space-y-6`}
           >
-            {resumeHistory?.map((r) => (
-              <ResumeHistoryItem
-                key={r.id}
-                resume={r}
-                darkMode={darkMode}
-                onDelete={() => deleteResume(r.id)}
-                onStar={() => toggleStar(r.id)}
-              />
-            ))}
+            {resumeHistory && resumeHistory.length > 0 ? (
+              resumeHistory.map((r) => (
+                <ResumeHistoryItem
+                  key={r._id}
+                  resume={r}
+                  darkMode={darkMode}
+                  onDelete={() => deleteResume(r.id)}
+                  onStar={() => toggleStar(r.id)}
+                />
+              ))
+            ) : (
+              <div
+                className={`flex items-center justify-center h-[60vh] w-full rounded-lg shadow-inner px-4 ${darkMode
+                  ? "bg-gradient-to-br from-gray-900 via-[#111827] to-gray-800"
+                  : "bg-white"
+                  }`}
+              >
+                <p
+                  className={`text-2xl font-medium text-center ${darkMode ? "text-white/80" : "text-gray-700"
+                    }`}
+                >
+                  You Haven’t Uploaded Any Resumes Yet
+                </p>
+              </div>
+            )}
+
           </div>
         )}
       </div>

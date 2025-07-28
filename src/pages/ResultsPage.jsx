@@ -8,9 +8,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../utils/axios";
-import ResultPageSkeleton from "../components/skeletons/ResultPageSkeleton";
 import ResultLoading from "../components/skeletons/resultLoading";
 
 const scoreTemplate = [
@@ -36,13 +35,6 @@ const scoreTemplate = [
   },
 ];
 
-let suggestions = [
-  "Add more technical skills relevant to the JD.",
-  "Include recent certifications.",
-  "Quantify your achievements in experience section.",
-  "Highlight key projects with tech stack used.",
-];
-
 export const ResultPage = () => {
   const navigate = useNavigate();
   const [progress, setProgress] = useState([0, 0, 0, 0]);
@@ -65,7 +57,7 @@ export const ResultPage = () => {
           const raw = historyData.data.score[item.key] ?? 0;
           return {
             label: item.label,
-            score: Math.round(raw * 100), // Convert to integer percentage
+            score: Math.round(raw * 100),
             icon: item.icon,
           };
         })
@@ -75,8 +67,9 @@ export const ResultPage = () => {
           icon: item.icon,
         }));
 
-  const finalScore = historyData?.data?.score?.result;
-  suggestions = suggestionsData?.data?.suggestions;
+  const finalScore = historyData?.data?.score?.result || 0;
+  const suggestions = suggestionsData?.data?.suggestions;
+
   useEffect(() => {
     if (!isLoading && historyData) {
       const timeout = setTimeout(() => {
@@ -87,25 +80,28 @@ export const ResultPage = () => {
   }, [isLoading, historyData]);
 
   if (isLoading || isSuggestionLoading) return <ResultLoading />;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white p-6 flex flex-col items-center">
-      <div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
         <button
-          onClick={() => navigate("/student")}
-          className="bg-blue-700 cursor-pointer p-2 rounded-lg"
+          onClick={() => console.log("HI")}
+          className="bg-blue-700 p-2 rounded-lg text-white"
         >
           Home
         </button>
-        <h1 className="text-3xl block md:text-4xl font-bold mb-6 text-center">
+        <h1 className="text-3xl md:text-4xl font-bold text-center w-full -ml-10">
           Resume vs JD Match Result
         </h1>
       </div>
 
-      <div className="flex gap-6 w-full max-w-3xl">
+      {/* Score Circles */}
+      <div className="flex flex-wrap justify-center gap-10 mt-10">
         {scores.map((item, i) => (
           <div
             key={i}
-            className="w-full flex  flex-col justify-center items-center gap-6"
+            className="flex flex-col justify-center items-center gap-4"
           >
             <div className="relative w-16 h-16">
               <svg
@@ -143,21 +139,22 @@ export const ResultPage = () => {
                 {progress[i]}%
               </div>
             </div>
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center text-sm">
               {item.icon}
-              <span className="ml-2 w-32">{item.label}</span>
+              <span className="ml-2">{item.label}</span>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="mt-10 text-center">
-        <div className="flex justify-center items-center gap-3">
+      {/* Final Match Score */}
+      <div className="mt-16 text-center">
+        <div className="flex justify-center items-center gap-2 mb-4">
           <Brain className="w-6 h-6 text-pink-500" />
           <h2 className="text-2xl font-semibold">Final Match Score</h2>
         </div>
         <motion.div
-          className="mt-4 w-40 h-40 rounded-full bg-gradient-to-tr from-pink-500 to-indigo-500 flex items-center justify-center text-white text-3xl font-bold shadow-2xl"
+          className="mx-auto w-40 h-40 rounded-full bg-gradient-to-tr from-pink-500 to-indigo-500 flex items-center justify-center text-white text-3xl font-bold shadow-2xl"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1 }}
@@ -166,7 +163,8 @@ export const ResultPage = () => {
         </motion.div>
       </div>
 
-      <div className="mt-12 w-full max-w-2xl">
+      {/* Suggestions */}
+      <div className="mt-12 w-full max-w-2xl mx-auto">
         <h3 className="text-xl font-semibold mb-3 border-b border-gray-600 pb-2">
           🔍 AI Suggestions
         </h3>

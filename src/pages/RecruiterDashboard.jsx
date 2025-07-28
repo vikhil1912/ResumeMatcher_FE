@@ -8,92 +8,77 @@ import { JDCard } from "../components/JDCard";
 import { HistoryCard } from "../components/HistoryCard";
 import axiosInstance from "../utils/axios";
 import { toast } from "react-hot-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 export const RecruiterDashboard = () => {
 
   const { user } = useAuth();
   const { darkMode } = useDarkMode();
   const navigate = useNavigate();
-  
+
   const [activeTab, setActiveTab] = useState("jd");
   const [jobDescription, setJobDescription] = useState("");
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [analysisResult, setAnalysisResult] = useState(null);
 
-  // Load history from API
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        setHistoryLoading(true);
-        // Replace with your actual API endpoint
-        const response = await axiosInstance.get('/api/analysis/history');
-        setHistory(response.data);
-      } catch (error) {
-        toast.error("Failed to load history");
-        console.error("History load error:", error);
-        
-        // Fallback mock data if API fails (remove in production)
-        setHistory([
-          { 
-            id: 1, 
-            jdText: "Senior Frontend Developer with 5+ years React experience", 
-            date: new Date().toISOString(),
-            topResumes: [
-              { id: 101, name: "John_Doe_Resume.pdf", score: 92 },
-              { id: 102, name: "Jane_Smith_Resume.pdf", score: 88 }
-            ]
-          }
-        ]);
-      } finally {
-        setHistoryLoading(false);
-      }
-    };
-
-    fetchHistory();
-  }, []);
-
-  const handleFetchTopResumes = async () => {
-    if (!jobDescription.trim()) {
-      toast.error("Please enter a job description");
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      const response = await axiosInstance.post('/api/analyze', { 
-        jdText: jobDescription 
+  const {
+    data: matchResult,
+    mutate: HrAnalyse,
+    isPending: HrAnalysisLoading
+  } = useMutation({
+    mutationFn: async () => {
+      const response = await axiosInstance.post("/hr/upload", {
+        description: jobDescription
       });
-      
-      const newEntry = {
-        id: response.data.analysisId,
-        jdText: jobDescription,
-        date: new Date().toISOString(),
-        topResumes: response.data.topResumes
-      };
-      
-      setHistory([newEntry, ...history]);
-      navigate(`/recruiter/results/${newEntry.id}`);
-      
-    } catch (error) {
-      toast.error("Analysis failed");
-      console.error("Analysis error:", error);
-    } finally {
-      setLoading(false);
+      setAnalysisResult(response?.data?.data);
+      return response;
+    },
+    onSuccess: (data) => {
+      toast.success("Uploaded");
+      navigate(`/recruiter/results/${data?.data?.data?._id}`);
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || "Something went wrong");
     }
-  };
+  })
+
+  const { data: historyData, isLoading: isHistoryLoading } = useQuery({
+    queryKey: ["HrHistory"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/hr/history");
+      return response;
+    }
+  });
+
+  const JDhistory = historyData?.data;
+  JDhistory?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const { mutate: logoutMutate, isPending } = useMutation({
+    mutationFn: async () => {
+      const response = await axiosInstance.post("/user/logout");
+    },
+    onSuccess: () => {
+      toast.success("Logged Out");
+      localStorage.removeItem("user");
+      window.location.href = "/";
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || "Something went wrong");
+    },
+  });
 
   const handleHistoryItemClick = (item) => {
-    navigate(`/recruiter/results/${item.id}`);
+    navigate(`/recruiter/results/${item._id}`);
   };
 
   return (
-    <div className={`min-h-screen ${
-      darkMode ? "bg-gray-900" : "bg-gradient-to-br from-teal-500 to-indigo-600"
-    } text-gray-100`}>
+    <div className={`min-h-screen ${darkMode ? "bg-gray-900" : "bg-gradient-to-br from-teal-500 to-indigo-600"
+      } text-gray-100`}>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Header user={user} darkMode={darkMode} />
-        
+
         <TabNavigation
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -108,15 +93,15 @@ export const RecruiterDashboard = () => {
           <JDCard
             jobDescription={jobDescription}
             setJobDescription={setJobDescription}
-            history={history}
-            loading={loading}
+            history={JDhistory}
+            loading={HrAnalysisLoading}
             darkMode={darkMode}
-            onFetchTopResumes={handleFetchTopResumes}
+            onFetchTopResumes={HrAnalyse}
           />
         ) : (
           <HistoryCard
-            history={history}
-            loading={historyLoading}
+            history={JDhistory}
+            loading={isHistoryLoading}
             darkMode={darkMode}
             onViewResumes={handleHistoryItemClick}
           />

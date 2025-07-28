@@ -49,7 +49,10 @@ export const CandidateDashboard = ({ user }) => {
 
   const { data: historyData, isLoading: isHistoryLoading } = useQuery({
     queryKey: ["history"],
-    queryFn: async () => await axiosInstance.get("/student/history"),
+    queryFn: async () => {
+      const response = await axiosInstance.get("/student/history")
+      return response
+    }
   });
 
   const resumeHistory = historyData?.data;
@@ -58,6 +61,7 @@ export const CandidateDashboard = ({ user }) => {
   const { mutate: logoutMutate, isPending } = useMutation({
     mutationFn: async () => {
       const response = await axiosInstance.post("/user/logout");
+      return response
     },
     onSuccess: () => {
       toast.success("Logged Out");
@@ -84,11 +88,10 @@ export const CandidateDashboard = ({ user }) => {
 
   return (
     <div
-      className={`min-h-screen ${
-        darkMode
-          ? "bg-gray-900"
-          : "bg-gradient-to-br from-teal-500 to-indigo-600"
-      } text-gray-100`}
+      className={`min-h-screen ${darkMode
+        ? "bg-gray-900"
+        : "bg-gradient-to-br from-teal-500 to-indigo-600"
+        } text-gray-100`}
     >
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
@@ -102,11 +105,10 @@ export const CandidateDashboard = ({ user }) => {
           <div className="flex items-center space-x-4">
             <button
               onClick={logoutMutate}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                darkMode
-                  ? "bg-gray-700 hover:bg-gray-600 text-gray-100"
-                  : "bg-white hover:bg-gray-100 text-gray-900"
-              }`}
+              className={`px-4 py-2 rounded-lg font-medium transition ${darkMode
+                ? "bg-gray-700 hover:bg-gray-600 text-gray-100"
+                : "bg-white hover:bg-gray-100 text-gray-900"
+                }`}
             >
               Log Out
             </button>
@@ -118,17 +120,15 @@ export const CandidateDashboard = ({ user }) => {
         <div className="flex border-b border-gray-300 dark:border-gray-600 mb-8">
           <button
             onClick={() => setActiveTab("analyzer")}
-            className={`flex-1 py-3 text-center font-semibold transition ${
-              activeTab === "analyzer" ? activeClass : inactiveClass
-            }`}
+            className={`flex-1 py-3 text-center font-semibold transition ${activeTab === "analyzer" ? activeClass : inactiveClass
+              }`}
           >
             Resume Analyzer
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`flex-1 py-3 text-center font-semibold transition ${
-              activeTab === "history" ? activeClass : inactiveClass
-            }`}
+            className={`flex-1 py-3 text-center font-semibold transition ${activeTab === "history" ? activeClass : inactiveClass
+              }`}
           >
             Resume History
           </button>
@@ -137,9 +137,8 @@ export const CandidateDashboard = ({ user }) => {
         {/* Content */}
         {activeTab === "analyzer" ? (
           <div
-            className={`relative grid lg:grid-cols-2 gap-8 ${
-              darkMode ? "" : "bg-white/20 backdrop-blur-md"
-            } rounded-xl p-6`}
+            className={`relative grid lg:grid-cols-2 gap-8 ${darkMode ? "" : "bg-white/20 backdrop-blur-md"
+              } rounded-xl p-6`}
           >
             {!analysisResult ? (
               <>
@@ -152,11 +151,10 @@ export const CandidateDashboard = ({ user }) => {
                     value={jobDescription}
                     onChange={(e) => setJobDescription(e.target.value)}
                     placeholder="Paste the complete job description..."
-                    className={`w-full h-64 p-4 rounded-lg border focus:outline-none transition ${
-                      darkMode
-                        ? "bg-gray-800 border-gray-600 focus:border-blue-400 text-gray-100 placeholder-gray-400"
-                        : "bg-white border-gray-300 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                    }`}
+                    className={`w-full h-64 p-4 rounded-lg border focus:outline-none transition ${darkMode
+                      ? "bg-gray-800 border-gray-600 focus:border-blue-400 text-gray-100 placeholder-gray-400"
+                      : "bg-white border-gray-300 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                      }`}
                   />
                 </div>
 
@@ -164,11 +162,10 @@ export const CandidateDashboard = ({ user }) => {
                 <div>
                   <h2 className="text-2xl font-semibold mb-4">Upload Resume</h2>
                   <div
-                    className={`p-6 rounded-lg border transition-colors ${
-                      darkMode
-                        ? "bg-gray-800 border-gray-600"
-                        : "bg-white border-gray-300"
-                    }`}
+                    className={`p-6 rounded-lg border transition-colors ${darkMode
+                      ? "bg-gray-800 border-gray-600"
+                      : "bg-white border-gray-300"
+                      }`}
                   >
                     {!resumeFile ? (
                       <ResumeUploader
@@ -196,13 +193,12 @@ export const CandidateDashboard = ({ user }) => {
                   <button
                     onClick={() => analyzeMutate()}
                     disabled={!jobDescription || !resumeFile || analysisLoading}
-                    className={`px-8 py-3 rounded-lg font-semibold transition ${
-                      !jobDescription || !resumeFile || analysisLoading
-                        ? "bg-gray-400 cursor-not-allowed text-gray-200"
-                        : darkMode
+                    className={`px-8 py-3 rounded-lg font-semibold transition ${!jobDescription || !resumeFile || analysisLoading
+                      ? "bg-gray-400 cursor-not-allowed text-gray-200"
+                      : darkMode
                         ? "bg-blue-600 hover:bg-blue-500 text-white"
                         : "bg-blue-500 hover:bg-blue-400 text-white"
-                    }`}
+                      }`}
                   >
                     {analysisLoading ? "Analyzing..." : "Analyze"}
                   </button>
@@ -214,9 +210,8 @@ export const CandidateDashboard = ({ user }) => {
           </div>
         ) : (
           <div
-            className={`${
-              darkMode ? "" : "bg-white/20 backdrop-blur-md"
-            } rounded-xl p-6 space-y-6`}
+            className={`${darkMode ? "" : "bg-white/20 backdrop-blur-md"
+              } rounded-xl p-6 space-y-6`}
           >
             {resumeHistory?.map((r) => (
               <ResumeHistoryItem

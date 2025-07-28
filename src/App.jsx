@@ -11,6 +11,7 @@ import { AuthPage } from "./pages/AuthPage";
 import { CandidateDashboard } from "./pages/CandidateDashboard";
 import { RecruiterDashboard } from "./pages/RecruiterDashboard";
 import { ErrorPage } from "./pages/ErrorPage";
+import { AnalysisResultsPage } from "./pages/AnalysisResultsPage";
 import { AuthProvider } from "./contexts/AuthProvider";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DarkModeProvider } from "./contexts/DarkModeProvider";
@@ -86,6 +87,14 @@ export default function App() {
           <Route
             path="/signup"
             element={user ? <Navigate to={"/"} /> : <SignUpPage />}
+          />
+          <Route
+            path="/recruiter/results/:analysisId"
+            element={
+              <ProtectedRoute requiredRole="HR" user={user}>
+                <AnalysisResultsPage />
+              </ProtectedRoute>
+            }
           />
           <Route path="*" element={<ErrorPage />} />
         </Routes>

@@ -9,18 +9,51 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../utils/axios";
 import toast from "react-hot-toast";
+import ResultPage from "./ResultsPage";
+import ResultLoading from "../components/skeletons/resultLoading";
 
-export const CandidateDashboard = () => {
-  const { user, logoutContext } = useAuth();
+export const CandidateDashboard = ({ user }) => {
   const { darkMode } = useDarkMode();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("analyzer");
   const [jobDescription, setJobDescription] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
-  const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [resumeHistory, setResumeHistory] = useState([]);
+
+  const {
+    data: matchData,
+    mutate: analyzeMutate,
+    isPending: analysisLoading,
+  } = useMutation({
+    mutationFn: async () => {
+      const formData = new FormData();
+      formData.append("resume", resumeFile);
+      formData.append("JobDescription", jobDescription);
+      const response = await axiosInstance.post("/student/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setAnalysisResult(response?.data?.data);
+      return response;
+    },
+    onSuccess: (data) => {
+      toast.success("Uploaded");
+      navigate(`/student-result/${data?.data?.data?.history_id}`);
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || "Something went wrong");
+    },
+  });
+
+  const { data: historyData, isLoading: isHistoryLoading } = useQuery({
+    queryKey: ["history"],
+    queryFn: async () => await axiosInstance.get("/student/history"),
+  });
+
+  const resumeHistory = historyData?.data;
+  resumeHistory?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const { mutate: logoutMutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -37,37 +70,6 @@ export const CandidateDashboard = () => {
   });
 
   const handleFileUpload = (file) => setResumeFile(file);
-  const deleteResume = (id) =>
-    setResumeHistory(resumeHistory.filter((r) => r.id !== id));
-  const toggleStar = (id) =>
-    setResumeHistory(
-      resumeHistory.map((r) =>
-        r.id === id ? { ...r, starred: !r.starred } : r
-      )
-    );
-
-  const startAnalysis = async () => {
-    setAnalysisLoading(true);
-    const result = await mockAnalyzeAPI(jobDescription, resumeFile);
-    setAnalysisResult(result);
-    setAnalysisLoading(false);
-  };
-
-  const closeResult = () => {
-    const newEntry = {
-      id: Date.now(),
-      fileName: resumeFile.name,
-      uploadDate: new Date().toLocaleDateString(),
-      job: jobDescription.split("\n")[0] || "Analyzed Role",
-      improvements: analysisResult.improvements,
-      suggestions: analysisResult.suggestions,
-      progress: analysisResult.progress,
-    };
-    setResumeHistory([newEntry, ...resumeHistory]);
-    setJobDescription("");
-    setResumeFile(null);
-    setAnalysisResult(null);
-  };
 
   const activeClass = "text-white border-b-2 border-white";
   const inactiveClass = darkMode
@@ -77,6 +79,8 @@ export const CandidateDashboard = () => {
   useEffect(() => {
     document.title = "Dashboard|Resume Matcher";
   }, []);
+
+  if (analysisLoading) return <ResultLoading />;
 
   return (
     <div
@@ -92,7 +96,7 @@ export const CandidateDashboard = () => {
           <div>
             <h1 className="text-4xl font-extrabold">Resume Matcher</h1>
             <p className="mt-1 text-lg text-gray-300">
-              Welcome back, {user?.firstName || "Candidate"}!
+              Welcome back, {user?.name || "Candidate"}!
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -190,7 +194,7 @@ export const CandidateDashboard = () => {
                 {/* Analyze Button */}
                 <div className="lg:col-span-2 text-center mt-4">
                   <button
-                    onClick={startAnalysis}
+                    onClick={() => analyzeMutate()}
                     disabled={!jobDescription || !resumeFile || analysisLoading}
                     className={`px-8 py-3 rounded-lg font-semibold transition ${
                       !jobDescription || !resumeFile || analysisLoading
@@ -205,35 +209,7 @@ export const CandidateDashboard = () => {
                 </div>
               </>
             ) : (
-              <div className="lg:col-span-2 space-y-4">
-                <button
-                  onClick={closeResult}
-                  className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                  aria-label="Close"
-                >
-                  &times;
-                </button>
-                <h2 className="text-2xl font-semibold">Analysis Result</h2>
-                <p>
-                  <strong>Match Progress:</strong> {analysisResult.progress}%
-                </p>
-                <div>
-                  <h3 className="font-medium mt-4">Improvements:</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {analysisResult.improvements.map((imp, i) => (
-                      <li key={i}>{imp}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="font-medium mt-4">Suggestions:</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {analysisResult.suggestions.map((sug, i) => (
-                      <li key={i}>{sug}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+              <ResultPage analysisResult={analysisResult} />
             )}
           </div>
         ) : (
@@ -242,7 +218,7 @@ export const CandidateDashboard = () => {
               darkMode ? "" : "bg-white/20 backdrop-blur-md"
             } rounded-xl p-6 space-y-6`}
           >
-            {resumeHistory.map((r) => (
+            {resumeHistory?.map((r) => (
               <ResumeHistoryItem
                 key={r.id}
                 resume={r}
@@ -257,17 +233,3 @@ export const CandidateDashboard = () => {
     </div>
   );
 };
-
-async function mockAnalyzeAPI() {
-  return new Promise((res) =>
-    setTimeout(
-      () =>
-        res({
-          progress: 82,
-          improvements: ["Added keywords", "Optimized bullets"],
-          suggestions: ["Use metrics", "ATS format"],
-        }),
-      2000
-    )
-  );
-}

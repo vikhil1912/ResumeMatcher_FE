@@ -22,6 +22,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import EntryPage from "./pages/EntryPage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ResultPage from "./pages/ResultsPage";
 
 export default function App() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
@@ -42,7 +43,6 @@ export default function App() {
   });
   useEffect(() => {
     const t = userData;
-    console.log(t);
   }, []);
 
   return (
@@ -67,7 +67,7 @@ export default function App() {
             path="/student"
             element={
               <ProtectedRoute requiredRole="Student" user={user}>
-                <CandidateDashboard />
+                <CandidateDashboard user={user} />
               </ProtectedRoute>
             }
           />
@@ -83,6 +83,7 @@ export default function App() {
             path="/login"
             element={user ? <Navigate to={"/"} /> : <LoginPage />}
           />
+          <Route path={`/student-result/:historyid`} element={<ResultPage />} />
           <Route
             path="/signup"
             element={user ? <Navigate to={"/"} /> : <SignUpPage />}

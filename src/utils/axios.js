@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "https://resumematcher-be.vercel.app/",
+  baseURL: "http://resume-matcher-pi.vercel.app/",
   withCredentials: true,
 });
 

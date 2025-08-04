@@ -2,7 +2,7 @@ import axios from "axios";
 
 const axiosInstance = axios.create({
   baseURL: "https://resume-matcher-pi.vercel.app/api/",
-  credintials: "include",
+  // credintials: "include",
   withCredentials: true,
 });
 

@@ -25,13 +25,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ResultPage from "./pages/ResultsPage";
 
 export default function App() {
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
+  // const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
+  const [user, setUser] = useState(() => {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    return null;
+  }
+});
   const { data: userData, isLoading } = useQuery({
     queryKey: ["userdata"],
     queryFn: async () => {
       try {
         const response = await axiosInstance.get("/user/me");
-        setUser(JSON.parse(localStorage.getItem("user")));
+        // setUser(JSON.parse(localStorage.getItem("user")));
+        const storedUser = localStorage.getItem("user");
+        setUser(storedUser ? JSON.parse(storedUser) : null);
         return response;
       } catch (error) {
         if (error?.response?.status === 401) {
